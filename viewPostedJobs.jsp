@@ -1,55 +1,105 @@
 <%@ page import="java.sql.*" %>
-<%@ page import="jakarta.servlet.http.HttpSession" %>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
 <%
-    HttpSession session = request.getSession(false);
-    if (session == null || session.getAttribute("session_email") == null || !"employer".equals(session.getAttribute("session_role"))) {
+    if (session == null || session.getAttribute("session_userid") == null || !"employer".equals(session.getAttribute("session_role"))) {
         response.sendRedirect("login.jsp");
         return;
     }
 
-    String email = (String) session.getAttribute("session_email");
+    int employerId = (Integer) session.getAttribute("session_userid");
+
     Connection con = null;
     PreparedStatement pst = null;
     ResultSet rs = null;
-
-    Class.forName("com.mysql.cj.jdbc.Driver");
-    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jobify", "root", "Anwesha2014$");
-
-    pst = con.prepareStatement("SELECT * FROM jobs WHERE employer_id = (SELECT user_id FROM users WHERE email = ?)");
-    pst.setString(1, email);
-    rs = pst.executeQuery();
 %>
+
+<!DOCTYPE html>
 <html>
 <head>
-    <title>View Posted Jobs</title>
+    <meta charset="UTF-8">
+    <title>Your Posted Jobs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 90%;
+            margin: auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0px 0px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
 </head>
 <body>
-    <center>
-        <h2>📋 Jobs You've Posted</h2>
-        <table border="1" cellpadding="10">
-            <tr>
-                <th>Job Title</th>
-                <th>Category</th>
-                <th>Location</th>
-                <th>Salary</th>
-                <th>Experience</th>
-                <th>Posted Date</th>
-            </tr>
-            <%
-                while (rs.next()) {
-            %>
-            <tr>
-                <td><%= rs.getString("title") %></td>
-                <td><%= rs.getString("category") %></td>
-                <td><%= rs.getString("location") %></td>
-                <td><%= rs.getString("salary") %></td>
-                <td><%= rs.getInt("experience") %> years</td>
-                <td><%= rs.getTimestamp("posted_date") %></td>
-            </tr>
-            <% } %>
-        </table>
-        <br><a href="employer.jsp">🔙 Back to Dashboard</a>
-    </center>
+
+<h2>📋 Jobs You Have Posted</h2>
+
+<table>
+    <tr>
+        <th>Job ID</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Description</th>
+        <th>Salary</th>
+        <th>Location</th>
+        <th>Experience</th>
+        <th>Type</th>
+    </tr>
+
+<%
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jobify", "root", "Anwesha2014$");
+
+        String sql = "SELECT * FROM jobs WHERE employer_id = ?";
+        pst = con.prepareStatement(sql);
+        pst.setInt(1, employerId);
+        rs = pst.executeQuery();
+
+        while (rs.next()) {
+%>
+    <tr>
+        <td><%= rs.getInt("job_id") %></td>
+        <td><%= rs.getString("title") %></td>
+        <td><%= rs.getString("category") %></td>
+        <td><%= rs.getString("description") %></td>
+        <td><%= rs.getInt("salary") %></td>
+        <td><%= rs.getString("location") %></td>
+        <td><%= rs.getInt("experience") %> yrs</td>
+        <td><%= rs.getString("job_type") %></td>
+    </tr>
+<%
+        }
+    } catch (Exception e) {
+        out.println("<tr><td colspan='8'>Error: " + e.getMessage() + "</td></tr>");
+    } finally {
+        if (rs != null) rs.close();
+        if (pst != null) pst.close();
+        if (con != null) con.close();
+    }
+%>
+
+</table>
 </body>
 </html>
