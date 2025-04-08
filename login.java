@@ -53,15 +53,17 @@ public class login extends HttpServlet {
                 session.setAttribute("session_role", role);
 
                 // ✅ Role-based redirection
-                if ("job_seeker".equals(role)) {
+                 if ("job_seeker".equals(role)) {
                     RequestDispatcher rd = req.getRequestDispatcher("/user.jsp");
                     rd.forward(req, resp);
+                } else if ("employer".equals(role)) {
+                    RequestDispatcher rd = req.getRequestDispatcher("/employer.jsp");
+                    rd.forward(req, resp);
+                } else if ("admin".equals(role)) {
+                    RequestDispatcher rd = req.getRequestDispatcher("/admin.jsp");
+                    rd.forward(req, resp);
                 }
-                else if("employer".equals(role)) {
-                        RequestDispatcher rd = req.getRequestDispatcher("/employer.jsp");
-                        rd.forward(req, resp);
 
-                }
 
             } else {
                 req.setAttribute("errorMessage", "Invalid Email or Password!");
